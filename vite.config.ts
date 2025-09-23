@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         // 在此将外部依赖标记为 external，避免被打包进入库
-        external: ["@tarojs/taro"],
+        external: ["@tarojs/taro", "react"],
         output: [
           {
             format: "es",

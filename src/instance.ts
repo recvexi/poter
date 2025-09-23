@@ -1,5 +1,7 @@
 import Taro from "@tarojs/taro"
 
+import { emitToterInit, emitToterUpdate } from "./events"
+
 import type { ToterAuth, ToterAuthParams, ToterRoute, ToterGrantedPermission } from "./type"
 
 /**
@@ -115,22 +117,25 @@ export class CToter {
 const Toter = {
   _instance: undefined as CToter | undefined,
   // 初始化标记与任务队列
-  _queue: [] as Array<() => Promise<any>>, // 任务为返回 Promise 的函数
+  _queue: [] as Array<() => Promise<unknown>>, // 任务为返回 Promise 的函数
   _flushing: false,
 
   init(routes: ToterRoute[], userPermissions: ToterGrantedPermission) {
     this._instance = new CToter(routes, userPermissions)
     // 初始化完成后尝试刷新队列
     void this._flush()
+    emitToterInit()
   },
 
   updateUserPermission(userPermissions: ToterGrantedPermission) {
     if (this._instance) {
       this._instance.updateGrantedPermission(userPermissions)
+      emitToterUpdate()
     } else {
       // 若未初始化，入队延后应用
       this._enqueue(async () => {
         this._instance!.updateGrantedPermission(userPermissions)
+        emitToterUpdate()
       })
     }
   },

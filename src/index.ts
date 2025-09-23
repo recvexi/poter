@@ -1,7 +1,5 @@
 import Toter from "./instance"
 
-import type { ToterGrantedPermission, ToterAuth, ToterRoute } from "./type"
-
+export { useAuthenticationAsync } from "./hooks/useAuthenticationAsync"
+export type { ToterGrantedPermission, ToterAuth, ToterRoute } from "./type"
 export default Toter
-
-export type { ToterGrantedPermission as ToterUserPermission, ToterAuth, ToterRoute }

@@ -51,14 +51,22 @@
     "vite": "^7.1.7",
     "vite-plugin-dts": "^4.3.0",
     "vitest": "^2.1.9",
-    "@tarojs/taro": "^3"
+    "@tarojs/taro": "^3",
+    "react": "^17.0.0",
+    "@types/react": "^17.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "mitt": "^3.0.1"
+  },
   "peerDependencies": {
-    "@tarojs/taro": ">=3"
+    "@tarojs/taro": ">=3",
+    "react": ">=17"
   },
   "peerDependenciesMeta": {
     "@tarojs/taro": {
+      "optional": false
+    },
+    "react": {
       "optional": false
     }
   },
