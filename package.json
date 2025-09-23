@@ -50,10 +50,17 @@
     "typescript": "~5.8.3",
     "vite": "^7.1.7",
     "vite-plugin-dts": "^4.3.0",
-    "vitest": "^2.1.9"
+    "vitest": "^2.1.9",
+    "@tarojs/taro": "^3"
   },
-  "dependencies": {
-    "@tarojs/taro": "^4.1.7"
+  "dependencies": {},
+  "peerDependencies": {
+    "@tarojs/taro": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "@tarojs/taro": {
+      "optional": false
+    }
   },
   "lint-staged": {
     "**/*.{ts,tsx,js,jsx}": [

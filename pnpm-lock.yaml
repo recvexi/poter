@@ -6,10 +6,6 @@ settings:
 
 importers:
   .:
-    dependencies:
-      "@tarojs/taro":
-        specifier: ^4.1.7
-        version: 4.1.7(@tarojs/components@4.1.7(@tarojs/helper@4.1.7)(postcss@8.5.6))(@tarojs/helper@4.1.7)(@tarojs/shared@4.1.7)(postcss@8.5.6)
     devDependencies:
       "@commitlint/cli":
         specifier: ^19.5.0
@@ -20,6 +16,9 @@ importers:
       "@eslint/js":
         specifier: ^9.36.0
         version: 9.36.0
+      "@tarojs/taro":
+        specifier: ^3
+        version: 3.6.38(@tarojs/helper@4.1.7)(@tarojs/runtime@4.1.7)
       "@types/node":
         specifier: ^22.7.9
         version: 22.18.6
@@ -67,7 +66,7 @@ importers:
         version: 7.1.7(@types/node@22.18.6)(jiti@2.6.0)(yaml@2.8.1)
       vite-plugin-dts:
         specifier: ^4.3.0
-        version: 4.5.4(@types/node@22.18.6)(typescript@5.8.3)(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(yaml@2.8.1))
+        version: 4.5.4(@types/node@22.18.6)(rollup@4.52.1)(typescript@5.8.3)(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(yaml@2.8.1))
       vitest:
         specifier: ^2.1.9
         version: 2.1.9(@types/node@22.18.6)
@@ -145,6 +144,11 @@ packages:
       { integrity: sha512-yZbBqeM6TkpP9du/I2pUZnJsRMGGvOuIrhjzC1AwHwW+6he4mni6Bp/m8ijn0iOuZuPI2BfkCoSRunpyjnrQKg== }
     engines: { node: ">=6.0.0" }
     hasBin: true
+
+  "@babel/runtime@7.28.4":
+    resolution:
+      { integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ== }
+    engines: { node: ">=6.9.0" }
 
   "@babel/template@7.27.2":
     resolution:
@@ -928,12 +932,6 @@ packages:
     resolution:
       { integrity: sha512-bgPhQEqLVv/2hwKLYv/XvsTWNZ9B/+X1zJ7WgQE9rO5oiLzrOZvkIW4pk13yOQBhHyjcND5qMOa6p83t+Z66iQ== }
 
-  "@stencil/core@2.22.3":
-    resolution:
-      { integrity: sha512-kmVA0M/HojwsfkeHsifvHVIYe4l5tin7J5+DLgtl8h6WWfiMClND5K3ifCXXI2ETDNKiEk21p6jql3Fx9o2rng== }
-    engines: { node: ">=12.10.0", npm: ">=6.0.0" }
-    hasBin: true
-
   "@swc/core-darwin-arm64@1.3.96":
     resolution:
       { integrity: sha512-8hzgXYVd85hfPh6mJ9yrG26rhgzCmcLO0h1TIl8U31hwmTbfZLzRitFQ/kqMJNbIBCwmNH1RU2QcJnL3d7f69A== }
@@ -1029,72 +1027,56 @@ packages:
     resolution:
       { integrity: sha512-iAoY/qRhNH8a/hBvm3zKj9qQ4oc2+3w1unPJa2XvTK3XjeLXtzcCingVPw/9e5mn1+0yPqxcBGp9Jf0pkfMb1g== }
 
-  "@tarojs/api@4.1.7":
+  "@tarojs/api@3.6.38":
     resolution:
-      { integrity: sha512-ql4joiX7itrNnsCZkRf0rW7uZwbajNMsl/wezD6+JWdkQeQFRUZoT+8zmgQiEuNFQRg0WjkjIn//yoj9qBMigQ== }
-    engines: { node: ">= 18" }
-    peerDependencies:
-      "@tarojs/runtime": 4.1.7
-      "@tarojs/shared": 4.1.7
-
-  "@tarojs/components@4.1.7":
-    resolution:
-      { integrity: sha512-fxdC/baHiUL17/E9dx/x51y2Z3FvTigt+4GBL+Loajv+4rUwp+eABJN0t1T0bCSgM/omEC5/+XJ7cxsHxoq/9A== }
-    engines: { node: ">= 18" }
-    peerDependencies:
-      "@types/react": "*"
-      vue: "*"
-    peerDependenciesMeta:
-      "@types/react":
-        optional: true
-      vue:
-        optional: true
+      { integrity: sha512-rn1AVZNLN5G2gK5JmnCqZ9pZn10xiwyfltRQRsk86ZTYfCjC8SELMVcN/YV9YRbbuGZpjP0AcAbWI6Mmy3E35g== }
 
   "@tarojs/helper@4.1.7":
     resolution:
       { integrity: sha512-bOll/uJuH/ChiCdcmJK6H3rDkt5R4WVMqzLTCCdN5FnlsL+UMFosj9dgPZmMwoyQq4Tf6m5b3cHg6FUtsU7ahA== }
     engines: { node: ">= 18" }
 
+  "@tarojs/runtime@3.6.38":
+    resolution:
+      { integrity: sha512-LcENEVcsxLokNHlNbzLJesbZJvQlRNrWbr8CV/wKCFzZttRM1OmlmDbV5kxnaAqGlC2yxIg786qc2wwnAwgwuQ== }
+    peerDependencies:
+      "@tarojs/shared": ~3.6.38
+
   "@tarojs/runtime@4.1.7":
     resolution:
       { integrity: sha512-dYsjfU9paF/cIjZKXJE1r1emnBUQA9FKWRfCOAQDPR/+MD4T2K2DhbYgkDjMdBFZ7jwQtua7DpxgRGbIiJQ2AQ== }
     engines: { node: ">= 18" }
+
+  "@tarojs/shared@3.6.38":
+    resolution:
+      { integrity: sha512-+bx8UdTJ5qAdFw8Xhx2/aUmw1KjEqhQ9gc7X5kE7aBuvIo+xL93HFVQ/DgJ0tNmONUQ3352g5+VdAtVeiI1xHg== }
 
   "@tarojs/shared@4.1.7":
     resolution:
       { integrity: sha512-Zafku6MSGIsKsDfcfoj5mAyW2pcxf2UlTWDpCyR2fynJyPP2Rjp85pFfA3gWoJJQMQPM5h3andduc7KOqRzcGw== }
     engines: { node: ">= 18" }
 
-  "@tarojs/taro@4.1.7":
+  "@tarojs/taro@3.6.38":
     resolution:
-      { integrity: sha512-b8KGAgAnpXSh626gTTBpJkpFMcYE1w0vNDfPOyJDhJ/kHuQeuZcTPzxuzxIIqte5WLLT4tFselSavXe49uOZbA== }
-    engines: { node: ">= 18" }
+      { integrity: sha512-KG5JQxVgkCjJ/sbSEL6+fyDHU8D/zUMpLJSSw4x/sq+9wnWvG+r4dnPh2meI1LcIhMdi+0sd3MErOis1qNqQlQ== }
     peerDependencies:
-      "@tarojs/components": 4.1.7
-      "@tarojs/helper": 4.1.7
-      "@tarojs/shared": 4.1.7
-      "@types/react": ^18
-      html-webpack-plugin: ^5
-      postcss: ^8
-      rollup: ^3
-      vue: ^3
-      webpack: ^5
-      webpack-chain: ^6
-      webpack-dev-server: ^4
+      "@tarojs/helper": ~3.6.38
+      "@tarojs/runtime": ~3.6.38
+      "@types/react": "*"
+      "@types/webpack": "*"
+      "@types/webpack-dev-server": "*"
+      postcss: "*"
+      vue: "*"
     peerDependenciesMeta:
       "@types/react":
         optional: true
-      html-webpack-plugin:
+      "@types/webpack":
         optional: true
-      rollup:
+      "@types/webpack-dev-server":
+        optional: true
+      postcss:
         optional: true
       vue:
-        optional: true
-      webpack:
-        optional: true
-      webpack-chain:
-        optional: true
-      webpack-dev-server:
         optional: true
 
   "@tybys/wasm-util@0.10.1":
@@ -1124,10 +1106,6 @@ packages:
   "@types/node@22.18.6":
     resolution:
       { integrity: sha512-r8uszLPpeIWbNKtvWRt/DbVi5zbqZyj1PTmhRMqBMvDnaz1QpmSKujUtJLrqGZeoM8v72MfYggDceY4K1itzWQ== }
-
-  "@types/postcss-url@10.0.4":
-    resolution:
-      { integrity: sha512-5QIO9NgbWmAkle65haRqkdgYPCOXheNsaFdbTJJQjT302yK3H49ql4t9a4y0NfpuPtU/UBo15VcV64WCSIMJKg== }
 
   "@typescript-eslint/eslint-plugin@8.44.1":
     resolution:
@@ -1632,10 +1610,6 @@ packages:
     resolution:
       { integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw== }
     engines: { node: ">= 8.10.0" }
-
-  classnames@2.5.1:
-    resolution:
-      { integrity: sha512-saHYOzhIQs6wy2sVxTM6bUDsQO4F50V9RQ22qBpEdCW+I+/Wmke2HOl6lS6dTpdxVhb88/I6+Hs+438c3lfUow== }
 
   cli-cursor@5.0.0:
     resolution:
@@ -2263,11 +2237,6 @@ packages:
     resolution:
       { integrity: sha512-EtKwoO6kxCL9WO5xipiHTZlSzBm7WLT627TqC/uVRd0HKmq8NXyebnNYxDoBi7wt8eTWrUrKXCOVaFq9x1kgag== }
 
-  hammerjs@2.0.8:
-    resolution:
-      { integrity: sha512-tSQXBXS/MWQOn/RKckawJ61vvsDpCom87JgxiYdGwHdOa0ht0vzUWDlfioofFCRU0L+6NGDt6XzbgoJvZkMeRQ== }
-    engines: { node: ">=0.8.0" }
-
   has-bigints@1.1.0:
     resolution:
       { integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg== }
@@ -2306,10 +2275,6 @@ packages:
     resolution:
       { integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw== }
     hasBin: true
-
-  hls.js@1.6.13:
-    resolution:
-      { integrity: sha512-hNEzjZNHf5bFrUNvdS4/1RjIanuJ6szpWNfTaX5I6WfGynWXGT7K/YQLYtemSvFExzeMdgdE4SsyVLJbd5PcZA== }
 
   html-escaper@2.0.2:
     resolution:
@@ -2685,6 +2650,10 @@ packages:
     resolution:
       { integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA== }
     engines: { node: ^12.20.0 || ^14.13.1 || >=16.0.0 }
+
+  lodash-es@4.17.21:
+    resolution:
+      { integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw== }
 
   lodash.camelcase@4.3.0:
     resolution:
@@ -3106,10 +3075,6 @@ packages:
       { integrity: sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw== }
     engines: { node: ">=8" }
 
-  resolve-pathname@3.0.0:
-    resolution:
-      { integrity: sha512-C7rARubxI8bXFNB/hqcp/4iUeIXJhJZvFPFPiSPRnhU5UPxzMFIl+2E6yY6c4k9giDJAhtV+enfA+G89N6Csng== }
-
   resolve-pkg-maps@1.0.0:
     resolution:
       { integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw== }
@@ -3366,11 +3331,6 @@ packages:
     resolution:
       { integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w== }
     engines: { node: ">= 0.4" }
-
-  swiper@11.1.15:
-    resolution:
-      { integrity: sha512-IzWeU34WwC7gbhjKsjkImTuCRf+lRbO6cnxMGs88iVNKDwV+xQpBCJxZ4bNH6gSrIbbyVJ1kuGzo3JTtz//CBw== }
-    engines: { node: ">= 4.7.0" }
 
   test-exclude@7.0.1:
     resolution:
@@ -3815,6 +3775,8 @@ snapshots:
   "@babel/parser@7.28.4":
     dependencies:
       "@babel/types": 7.28.4
+
+  "@babel/runtime@7.28.4": {}
 
   "@babel/template@7.27.2":
     dependencies:
@@ -4262,11 +4224,13 @@ snapshots:
   "@pkgjs/parseargs@0.11.0":
     optional: true
 
-  "@rollup/pluginutils@5.3.0":
+  "@rollup/pluginutils@5.3.0(rollup@4.52.1)":
     dependencies:
       "@types/estree": 1.0.8
       estree-walker: 2.0.2
       picomatch: 4.0.3
+    optionalDependencies:
+      rollup: 4.52.1
 
   "@rollup/rollup-android-arm-eabi@4.52.1":
     optional: true
@@ -4370,8 +4334,6 @@ snapshots:
     transitivePeerDependencies:
       - "@types/node"
 
-  "@stencil/core@2.22.3": {}
-
   "@swc/core-darwin-arm64@1.3.96":
     optional: true
 
@@ -4431,31 +4393,11 @@ snapshots:
     dependencies:
       "@swc/counter": 0.1.3
 
-  "@tarojs/api@4.1.7(@tarojs/runtime@4.1.7)(@tarojs/shared@4.1.7)":
+  "@tarojs/api@3.6.38":
     dependencies:
-      "@tarojs/runtime": 4.1.7
-      "@tarojs/shared": 4.1.7
-
-  "@tarojs/components@4.1.7(@tarojs/helper@4.1.7)(postcss@8.5.6)":
-    dependencies:
-      "@stencil/core": 2.22.3
-      "@tarojs/runtime": 4.1.7
-      "@tarojs/shared": 4.1.7
-      "@tarojs/taro": 4.1.7(@tarojs/components@4.1.7(@tarojs/helper@4.1.7)(postcss@8.5.6))(@tarojs/helper@4.1.7)(@tarojs/shared@4.1.7)(postcss@8.5.6)
-      classnames: 2.5.1
-      hammerjs: 2.0.8
-      hls.js: 1.6.13
-      resolve-pathname: 3.0.0
-      swiper: 11.1.15
-      tslib: 2.8.1
-    transitivePeerDependencies:
-      - "@tarojs/helper"
-      - html-webpack-plugin
-      - postcss
-      - rollup
-      - webpack
-      - webpack-chain
-      - webpack-dev-server
+      "@babel/runtime": 7.28.4
+      "@tarojs/runtime": 3.6.38(@tarojs/shared@3.6.38)
+      "@tarojs/shared": 3.6.38
 
   "@tarojs/helper@4.1.7":
     dependencies:
@@ -4484,22 +4426,26 @@ snapshots:
       - "@swc/helpers"
       - supports-color
 
+  "@tarojs/runtime@3.6.38(@tarojs/shared@3.6.38)":
+    dependencies:
+      "@tarojs/shared": 3.6.38
+      lodash-es: 4.17.21
+      tslib: 2.8.1
+
   "@tarojs/runtime@4.1.7":
     dependencies:
       "@tarojs/shared": 4.1.7
       tslib: 2.8.1
 
+  "@tarojs/shared@3.6.38": {}
+
   "@tarojs/shared@4.1.7": {}
 
-  "@tarojs/taro@4.1.7(@tarojs/components@4.1.7(@tarojs/helper@4.1.7)(postcss@8.5.6))(@tarojs/helper@4.1.7)(@tarojs/shared@4.1.7)(postcss@8.5.6)":
+  "@tarojs/taro@3.6.38(@tarojs/helper@4.1.7)(@tarojs/runtime@4.1.7)":
     dependencies:
-      "@tarojs/api": 4.1.7(@tarojs/runtime@4.1.7)(@tarojs/shared@4.1.7)
-      "@tarojs/components": 4.1.7(@tarojs/helper@4.1.7)(postcss@8.5.6)
+      "@tarojs/api": 3.6.38
       "@tarojs/helper": 4.1.7
       "@tarojs/runtime": 4.1.7
-      "@tarojs/shared": 4.1.7
-      "@types/postcss-url": 10.0.4
-      postcss: 8.5.6
 
   "@tybys/wasm-util@0.10.1":
     dependencies:
@@ -4521,11 +4467,6 @@ snapshots:
   "@types/node@22.18.6":
     dependencies:
       undici-types: 6.21.0
-
-  "@types/postcss-url@10.0.4":
-    dependencies:
-      "@types/node": 22.18.6
-      postcss: 8.5.6
 
   "@typescript-eslint/eslint-plugin@8.44.1(@typescript-eslint/parser@8.44.1(eslint@9.36.0(jiti@2.6.0))(typescript@5.8.3))(eslint@9.36.0(jiti@2.6.0))(typescript@5.8.3)":
     dependencies:
@@ -5000,8 +4941,6 @@ snapshots:
       readdirp: 3.6.0
     optionalDependencies:
       fsevents: 2.3.3
-
-  classnames@2.5.1: {}
 
   cli-cursor@5.0.0:
     dependencies:
@@ -5646,8 +5585,6 @@ snapshots:
 
   graphemer@1.4.0: {}
 
-  hammerjs@2.0.8: {}
-
   has-bigints@1.1.0: {}
 
   has-flag@4.0.0: {}
@@ -5671,8 +5608,6 @@ snapshots:
       function-bind: 1.1.2
 
   he@1.2.0: {}
-
-  hls.js@1.6.13: {}
 
   html-escaper@2.0.2: {}
 
@@ -5961,6 +5896,8 @@ snapshots:
   locate-path@7.2.0:
     dependencies:
       p-locate: 6.0.0
+
+  lodash-es@4.17.21: {}
 
   lodash.camelcase@4.3.0: {}
 
@@ -6263,8 +6200,6 @@ snapshots:
 
   resolve-from@5.0.0: {}
 
-  resolve-pathname@3.0.0: {}
-
   resolve-pkg-maps@1.0.0: {}
 
   resolve@1.22.10:
@@ -6512,8 +6447,6 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  swiper@11.1.15: {}
-
   test-exclude@7.0.1:
     dependencies:
       "@istanbuljs/schema": 0.1.3
@@ -6670,10 +6603,10 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-dts@4.5.4(@types/node@22.18.6)(typescript@5.8.3)(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(yaml@2.8.1)):
+  vite-plugin-dts@4.5.4(@types/node@22.18.6)(rollup@4.52.1)(typescript@5.8.3)(vite@7.1.7(@types/node@22.18.6)(jiti@2.6.0)(yaml@2.8.1)):
     dependencies:
       "@microsoft/api-extractor": 7.52.13(@types/node@22.18.6)
-      "@rollup/pluginutils": 5.3.0
+      "@rollup/pluginutils": 5.3.0(rollup@4.52.1)
       "@volar/typescript": 2.4.23
       "@vue/language-core": 2.2.0(typescript@5.8.3)
       compare-versions: 6.1.1
