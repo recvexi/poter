@@ -1,0 +1,117 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install deps for build",
+      "type": "shell",
+      "command": "pnpm install",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Build library",
+      "type": "shell",
+      "command": "pnpm run build",
+      "args": [],
+      "problemMatcher": ["$tsc"],
+      "group": "build"
+    },
+    {
+      "label": "Install lint deps",
+      "type": "shell",
+      "command": "pnpm install",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run ESLint after migration",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Re-run ESLint",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run ESLint with CJS config",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run ESLint after removing duplicate",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run Lint after cleanup",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Final ESLint run",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run lint after config rewrite",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Validate ESLint with ESM config",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run ESLint ESM again",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Run vitest",
+      "type": "shell",
+      "command": "pnpm run test",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    },
+    {
+      "label": "Re-run tests after queue fix",
+      "type": "shell",
+      "command": "pnpm run test",
+      "args": [],
+      "problemMatcher": [],
+      "group": "build"
+    }
+  ]
+}

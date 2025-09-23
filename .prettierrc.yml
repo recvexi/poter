@@ -1,0 +1,2 @@
+printWidth: 120 # 每行代码长度（超过会换行）
+semi: false # 使用分号结尾

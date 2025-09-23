@@ -1,0 +1,50 @@
+import { defineConfig } from "vite"
+import dts from "vite-plugin-dts"
+
+export default defineConfig(({ mode }) => {
+  const isProd = mode === "production"
+
+  return {
+    build: {
+      lib: {
+        entry: "src/index.ts",
+        name: "toter",
+        formats: ["es", "cjs"],
+        fileName: () => `toter`,
+      },
+      rollupOptions: {
+        // 在此将外部依赖标记为 external，避免被打包进入库
+        external: [],
+        output: [
+          {
+            format: "es",
+            entryFileNames: "toter.mjs",
+            chunkFileNames: "chunks/[name]-[hash].mjs",
+            assetFileNames: "assets/[name]-[hash][extname]",
+            exports: "named",
+          },
+          {
+            format: "cjs",
+            entryFileNames: "toter.cjs",
+            chunkFileNames: "chunks/[name]-[hash].cjs",
+            assetFileNames: "assets/[name]-[hash][extname]",
+            exports: "named",
+          },
+        ],
+      },
+      sourcemap: isProd,
+      minify: isProd ? "esbuild" : false,
+      outDir: "dist",
+      emptyOutDir: false,
+    },
+    plugins: [
+      dts({
+        entryRoot: "src",
+        outDir: "dist",
+        insertTypesEntry: true,
+        include: ["src"],
+        exclude: ["**/__tests__/**", "node_modules"],
+      }),
+    ],
+  }
+})
