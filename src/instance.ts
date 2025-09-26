@@ -17,6 +17,10 @@ export class CToter {
     this.grantedPermissions = userPermissions || {}
   }
 
+  getPermissions() {
+    return this.grantedPermissions
+  }
+
   updateGrantedPermission = (userPermissions: ToterGrantedPermission) => {
     this.grantedPermissions = userPermissions || {}
   }
