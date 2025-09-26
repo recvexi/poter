@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react"
 
-import { toterEmitter } from "../../events"
-import Toter from "../../index"
 
-import type { ToterAuthParams } from "../../type"
+import { toterEmitter } from "@/events"
+import Toter from "@/index"
+
+import type { ToterAuthParams } from "@/type"
 
 type PermissionWrapperProps = ToterAuthParams & {
   backup?: React.ReactNode

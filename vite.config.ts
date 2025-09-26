@@ -1,3 +1,5 @@
+import path from "path"
+
 import { defineConfig } from "vite"
 import dts from "vite-plugin-dts"
 
@@ -37,6 +39,7 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
       emptyOutDir: false,
     },
+
     plugins: [
       dts({
         entryRoot: "src",
@@ -46,5 +49,12 @@ export default defineConfig(({ mode }) => {
         exclude: ["**/__tests__/**", "node_modules"],
       }),
     ],
+
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+      extensions: [".js", ".json", ".ts", ".tsx", ".jsx"],
+    },
   }
 })

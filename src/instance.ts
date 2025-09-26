@@ -1,8 +1,8 @@
 import Taro from "@tarojs/taro"
 
-import { emitToterInit, emitToterUpdate } from "./events"
+import { emitToterInit, emitToterUpdate } from "@/events"
 
-import type { ToterAuth, ToterAuthParams, ToterRoute, ToterGrantedPermission } from "./type"
+import type { ToterAuth, ToterAuthParams, ToterRoute, ToterGrantedPermission } from "@/type"
 
 /**
  * @summary 权限控制类（实例化版本）
