@@ -14,7 +14,9 @@
     "lint:fix": "pnpm run lint -- --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "exports": {
     ".": {
@@ -29,6 +31,13 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=20.19"
+  },
   "sideEffects": false,
   "devDependencies": {
     "@commitlint/cli": "^19.5.0",
