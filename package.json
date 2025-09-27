@@ -1,6 +1,6 @@
 {
   "name": "poter",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -31,9 +31,18 @@
   "files": [
     "dist"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/recvexi/poter.git"
+  },
+  "homepage": "https://github.com/recvexi/poter#readme",
+  "bugs": {
+    "url": "https://github.com/recvexi/poter/issues"
+  },
   "publishConfig": {
     "access": "public"
   },
+  "license": "MIT",
   "packageManager": "pnpm@10.15.1",
   "engines": {
     "node": ">=20.19"
