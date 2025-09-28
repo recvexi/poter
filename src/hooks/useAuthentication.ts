@@ -3,14 +3,13 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { toterEmitter } from "../events"
 import Toter from "../instance"
 
-export interface UseAuthenticationAsyncOptions {
+export interface UseAuthenticationOptions {
   immediate?: boolean
   defaultValue?: boolean
   deps?: ReadonlyArray<unknown>
 }
 
-// Deprecated: use `useAuthentication` instead
-export function useAuthenticationAsync(url: string, options?: UseAuthenticationAsyncOptions) {
+export function useAuthentication(url: string, options?: UseAuthenticationOptions) {
   const { immediate = true, defaultValue = false, deps = [] } = options || {}
 
   const [canAccess, setCanAccess] = useState<boolean>(defaultValue)
