@@ -10,9 +10,9 @@ export default defineConfig(({ mode }) => {
     build: {
       lib: {
         entry: "src/index.ts",
-        name: "toter",
+        name: "poter",
         formats: ["es", "cjs"],
-        fileName: () => `toter`,
+        fileName: () => `poter`,
       },
       rollupOptions: {
         // 在此将外部依赖标记为 external，避免被打包进入库
@@ -20,14 +20,14 @@ export default defineConfig(({ mode }) => {
         output: [
           {
             format: "es",
-            entryFileNames: "toter.mjs",
+            entryFileNames: "poter.mjs",
             chunkFileNames: "chunks/[name]-[hash].mjs",
             assetFileNames: "assets/[name]-[hash][extname]",
             exports: "named",
           },
           {
             format: "cjs",
-            entryFileNames: "toter.cjs",
+            entryFileNames: "poter.cjs",
             chunkFileNames: "chunks/[name]-[hash].cjs",
             assetFileNames: "assets/[name]-[hash][extname]",
             exports: "named",

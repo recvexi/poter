@@ -21,12 +21,12 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/toter.mjs",
-      "require": "./dist/toter.cjs"
+      "import": "./dist/poter.mjs",
+      "require": "./dist/poter.cjs"
     }
   },
-  "main": "./dist/toter.cjs",
-  "module": "./dist/toter.mjs",
+  "main": "./dist/poter.cjs",
+  "module": "./dist/poter.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
