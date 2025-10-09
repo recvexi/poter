@@ -1,9 +1,9 @@
 import Taro from "@tarojs/taro"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import Toter, { CToter } from "../src/instance"
+import Poter, { CToter } from "../src/instance"
 
-import type { ToterRoute, ToterGrantedPermission } from "../src/type"
+import type { PoterRoute, PoterGrantedPermission } from "../src/type"
 
 vi.mock("@tarojs/taro", () => {
   return {
@@ -17,7 +17,7 @@ vi.mock("@tarojs/taro", () => {
 })
 
 describe("Toter instance", () => {
-  const routes: ToterRoute[] = [
+  const routes: PoterRoute[] = [
     {
       url: "/a",
       requiredPermissions: [{ resource: "article", actions: ["read"] }],
@@ -29,7 +29,7 @@ describe("Toter instance", () => {
     },
   ]
 
-  const perms: ToterGrantedPermission = {
+  const perms: PoterGrantedPermission = {
     article: ["read"],
     "sys:role": ["manage"],
   }
@@ -63,27 +63,27 @@ describe("Toter instance", () => {
 
 describe("Toter manager singleton", () => {
   type Task = () => Promise<unknown>
-  const routes: ToterRoute[] = [
+  const routes: PoterRoute[] = [
     { url: "/c", requiredPermissions: [{ resource: "c", actions: ["go"] }] },
     { url: "/d", requiredPermissions: [{ resource: "product", actions: ["read"] }] },
   ]
 
   beforeEach(() => {
     // 重置内部状态
-    Toter._instance = undefined as unknown as CToter
-    Toter._queue = [] as Array<Task>
-    Toter._flushing = false as boolean
+    Poter._instance = undefined as unknown as CToter
+    Poter._queue = [] as Array<Task>
+    Poter._flushing = false as boolean
   })
 
   it("authentication returns true before init (safe default)", () => {
-    expect(Toter.authentication("/c")).toBe(true)
+    expect(Poter.authentication("/c")).toBe(true)
   })
 
   it("queue calls before init and flush after init", async () => {
-    const p = Toter.navigateTo({ url: "/c" })
-    const d = Toter.navigateTo({ url: "/d" })
-    const f = (): Promise<ToterGrantedPermission> => {
-      return new Promise<ToterGrantedPermission>((resolve) => {
+    const p = Poter.navigateTo({ url: "/c" })
+    const d = Poter.navigateTo({ url: "/d" })
+    const f = (): Promise<PoterGrantedPermission> => {
+      return new Promise<PoterGrantedPermission>((resolve) => {
         setTimeout(() => {
           resolve({
             c: ["go"],
@@ -92,8 +92,9 @@ describe("Toter manager singleton", () => {
       })
     }
     const perm = await f()
-    const g = Toter.authenticationAsync("/d")
-    Toter.init(routes, perm)
+    // 使用 authRoute(waitInit:true) 替代已移除的 authRouteAsync
+    const g = Poter.authRoute("/d", { waitInit: true }) as Promise<boolean>
+    Poter.init(routes, perm)
     await expect(p).resolves.toMatchObject({ ok: true })
     await expect(d).rejects.toMatchObject({ code: 401 })
     await expect(g).resolves.toBe(false)

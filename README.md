@@ -1,11 +1,13 @@
 ## Poter · 基于资源-动作的权限控制与路由守卫
 
+> 版本变更请查看 [CHANGELOG](./CHANGELOG.md)
+
 一个面向 Taro + React 的轻量权限库，提供：
 
 - 资源-动作权限模型（Record<string, string[]>），支持通配符“\*”与正则资源匹配
 - 路由守卫与导航代理（navigateTo/redirectTo/switchTab），自动拦截无权限访问
 - 初始化前 API 调用排队，避免“白屏/误伤渲染”与竞态问题
-- React 生态集成：PermissionWrapper 组件与 useAuthenticationAsync Hook
+- React 生态集成：PermissionWrapper 组件与 useRoutePermission Hook
 - 简单类型与事件机制，权限更新后自动刷新视图
 
 ## 安装
@@ -31,7 +33,7 @@ yarn add poter @tarojs/taro react
 导入：
 
 ```ts
-import Toter, { PermissionWrapper, useAuthenticationAsync, type ToterRoute, type ToterGrantedPermission } from "poter"
+import Poter, { PermissionWrapper, useRoutePermission, type PoterRoute, type PoterGrantedPermission } from "poter"
 ```
 
 ## 快速开始
@@ -39,32 +41,32 @@ import Toter, { PermissionWrapper, useAuthenticationAsync, type ToterRoute, type
 ### 1) 定义路由与用户权限并初始化
 
 ```ts
-import Toter, { type ToterRoute, type ToterGrantedPermission } from "poter"
+import Poter, { type PoterRoute, type PoterGrantedPermission } from "poter"
 
 // 路由权限需求（可选 oneOfPerm：任一满足即通过；默认需要全部满足）
-const routes: ToterRoute[] = [
+const routes: PoterRoute[] = [
   { url: "/pages/article/index", requiredPermissions: [{ resource: "article", actions: ["read"] }] },
   { url: "/pages/sys/index", requiredPermissions: [{ resource: /^sys:.+$/, actions: ["manage"] }], oneOfPerm: true },
 ]
 
 // 当前用户已授予权限：资源 -> 动作
 // 支持通配符：例如 ["*"] 代表该资源下的所有动作
-const userPermissions: ToterGrantedPermission = {
+const userPermissions: PoterGrantedPermission = {
   article: ["read"],
   "sys:role": ["manage"],
 }
 
-Toter.init(routes, userPermissions)
+Poter.init(routes, userPermissions)
 ```
 
 ### 2) 在代码里做权限判断
 
 ```ts
 // 根据 url 判断是否可访问（若路由未配置权限，默认放行）
-const canVisit = Toter.authentication("/pages/article/index")
+const canVisit = Poter.authentication("/pages/article/index")
 
 // 自定义校验：传入所需权限数组
-const allowed = Toter.check({
+const allowed = Poter.check({
   requiredPermissions: [
     { resource: "article", actions: ["read"] },
     { resource: /^sys:.+$/, actions: ["manage"] },
@@ -77,7 +79,7 @@ const allowed = Toter.check({
 
 ```ts
 try {
-  await Toter.navigateTo({ url: "/pages/article/index" })
+  await Poter.navigateTo({ url: "/pages/article/index" })
 } catch (e) {
   // 无权限时抛出 { code: 401, message: "权限验证失败" }
 }
@@ -88,10 +90,10 @@ try {
 ### 4) React 集成：Hook 与组件
 
 ```tsx
-import { useAuthenticationAsync, PermissionWrapper } from "poter"
+import { useRoutePermission, PermissionWrapper } from "poter"
 
-// Hook：异步鉴权 + 状态
-const { canAccess, loading, error, refresh } = useAuthenticationAsync("/pages/article/index")
+// 路由权限鉴权 Hook（返回 canAccess/loading/error/refresh）
+const { canAccess, loading, error, refresh } = useRoutePermission("/pages/article/index")
 
 // 组件：基于权限包裹 UI
 <PermissionWrapper
@@ -104,7 +106,7 @@ const { canAccess, loading, error, refresh } = useAuthenticationAsync("/pages/ar
 
 ## 权限模型说明
 
-- ToterGrantedPermission：Record<资源, 动作[]>，例如：
+- PoterGrantedPermission：Record<资源, 动作[]>，例如：
 
   ```ts
   const perms = {
@@ -114,7 +116,7 @@ const { canAccess, loading, error, refresh } = useAuthenticationAsync("/pages/ar
   }
   ```
 
-- ToterAuth.resource 支持 string 或 RegExp：
+- PoterAuth.resource 支持 string 或 RegExp：
   - string：直接从用户权限中读取该 key
   - RegExp：对所有 key 做匹配，必须全部匹配项都满足 actions 要求
 
@@ -126,23 +128,24 @@ const { canAccess, loading, error, refresh } = useAuthenticationAsync("/pages/ar
 
 ## API 文档
 
-### 默认导出：Toter（单例管理器）
+### 默认导出：Poter（单例管理器）
 
-- init(routes: ToterRoute[], userPermissions: ToterGrantedPermission): void
+- init(routes: PoterRoute[], userPermissions: PoterGrantedPermission): void
   - 构造内部实例并触发事件通知（组件/Hook 会自动刷新）
   - 初始化完成后会自动刷新排队中的调用
 
-- updateUserPermission(userPermissions: ToterGrantedPermission): void
+- updateUserPermission(userPermissions: PoterGrantedPermission): void
   - 更新当前用户权限并触发刷新
 
 - authentication(url: string): boolean
   - 根据预设 routes 判断是否可访问
   - 未初始化时，安全默认值为 true（避免误伤渲染）
 
-- authenticationAsync(url: string): Promise<boolean>
-  - 未初始化时自动入队，初始化后返回正确结果
+- authRoute(url: string, options?: { waitInit?: boolean; defaultValue?: boolean }): boolean | Promise<boolean>
+  - waitInit = false（默认）：未初始化时直接返回 defaultValue（默认 false，不入队）
+  - waitInit = true：若未初始化则入队等待，最终返回真实鉴权结果（始终 Promise）
 
-- check(params: ToterAuthParams): boolean
+- check(params: PoterAuthParams): boolean
   - 自定义校验：传 requiredPermissions 与 oneOfPerm
 
 - navigateTo(options: Taro.navigateTo.Option): Promise<unknown>
@@ -155,19 +158,36 @@ const { canAccess, loading, error, refresh } = useAuthenticationAsync("/pages/ar
 
 > 队列语义：在 init 之前调用的鉴权/导航，会被排队等待初始化完成后串行执行，避免竞态问题。
 
-### Hook：useAuthenticationAsync(url, options?)
+### Hook：useRoutePermission(url, options?, deps?)
+
+针对路由 url 的异步权限鉴权 Hook，内部监听权限初始化与更新事件自动刷新。
+
+源码签名：`useRoutePermission(url: string, options?: { immediate?: boolean; defaultValue?: boolean }, deps: ReadonlyArray<unknown> = [])`
+
+注意：依赖数组是第三个独立参数，不在 options 内。
 
 ```ts
-type UseAuthenticationAsyncOptions = {
-  immediate?: boolean // 默认 true，mount 后立即请求
-  defaultValue?: boolean // 默认 false，初始 canAccess
-  deps?: ReadonlyArray<unknown> // 额外依赖变更时触发 refresh
+interface UseRoutePermissionOptions {
+  immediate?: boolean // 默认 true，挂载后立即鉴权
+  defaultValue?: boolean // 默认 false（初始 canAccess）
 }
 
-const { canAccess, loading, error, refresh } = useAuthenticationAsync(url, options)
+// 基础用法（立即鉴权）
+const { canAccess, loading } = useRoutePermission("/pages/article/index")
+
+// 自定义默认值 & 禁用挂载立即鉴权
+const p = useRoutePermission("/pages/article/index", { immediate: false, defaultValue: true })
+
+// 带额外依赖（依赖变化会重新触发 refresh）
+const { canAccess, refresh } = useRoutePermission(dynamicUrl, { immediate: true }, [dynamicUrl, userId])
 ```
 
-内部已订阅权限初始化/更新事件（toter:init / toter:updateUserPermission），无需手动处理。
+返回字段：
+
+- canAccess: boolean 当前是否允许访问
+- loading: boolean 当前是否在执行鉴权
+- error: unknown 鉴权异常（通常不抛，但保留）
+- refresh: () => Promise<boolean> 手动重新鉴权
 
 ### 组件：<PermissionWrapper />
 
@@ -184,10 +204,10 @@ type PermissionWrapperProps = {
 
 ### 类型导出
 
-- ToterGrantedPermission = Record<string, string[]>
-- ToterAuth = { resource: string | RegExp; actions?: string[] }
-- ToterAuthParams = { requiredPermissions?: ToterAuth[]; oneOfPerm?: boolean }
-- ToterRoute = { url: string; requiredPermissions?: ToterAuth[]; oneOfPerm?: boolean }
+- PoterGrantedPermission = Record<string, string[]>
+- PoterAuth = { resource: string | RegExp; actions?: string[] }
+- PoterAuthParams = { requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
+- PoterRoute = { url: string; requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
 
 ## 事件说明（内部）
 
@@ -216,8 +236,9 @@ pnpm run build          # 构建库（产物位于 dist/）
 ## 设计细节与边界
 
 - 未初始化行为
-  - authentication 返回 true（安全默认值）
-  - authenticationAsync / 导航 API 会入队等待 init 完成后再执行
+  - authentication 返回 true（安全默认值，用于同步快速判断）
+  - authRoute(url,{waitInit:false}) 直接返回 defaultValue（默认 false，不触发排队）
+  - authRoute(url,{waitInit:true}) / 导航 API 会入队等待 init 完成后再执行并返回真实结果
 - 导航异常
   - 无权限时抛出 { code: 401, message: "权限验证失败" }
 - 正则资源

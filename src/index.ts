@@ -1,7 +1,7 @@
 import PermissionWrapper from "@/components/permission-wrapper"
-import Toter from "@/instance"
+import Poter from "@/instance"
 
-export { useAuthenticationAsync } from "@/hooks/useAuthenticationAsync"
-export type { ToterGrantedPermission, ToterAuth, ToterRoute } from "@/type"
-export default Toter
+export { useRoutePermission } from "@/hooks/useRoutePermission"
+export type { PoterGrantedPermission, PoterAuth, PoterAuthParams, PoterRoute } from "@/type"
+export default Poter
 export { PermissionWrapper }

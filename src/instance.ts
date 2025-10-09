@@ -1,18 +1,18 @@
 import Taro from "@tarojs/taro"
 
-import { emitToterInit, emitToterUpdate } from "@/events"
+import { emitPoterInit, emitPoterUpdate } from "@/events"
 
-import type { ToterAuth, ToterAuthParams, ToterRoute, ToterGrantedPermission } from "@/type"
+import type { PoterAuth, PoterAuthParams, PoterRoute, PoterGrantedPermission } from "@/type"
 
 /**
  * @summary 权限控制类（实例化版本）
  * @description  通过构造函数注入 routes 与 grantedPermissions;
  */
 export class CToter {
-  private routes: ToterRoute[]
-  private grantedPermissions: ToterGrantedPermission
+  private routes: PoterRoute[]
+  private grantedPermissions: PoterGrantedPermission
 
-  constructor(routes: ToterRoute[], userPermissions: ToterGrantedPermission) {
+  constructor(routes: PoterRoute[], userPermissions: PoterGrantedPermission) {
     this.routes = routes || []
     this.grantedPermissions = userPermissions || {}
   }
@@ -21,7 +21,7 @@ export class CToter {
     return this.grantedPermissions
   }
 
-  updateGrantedPermission = (userPermissions: ToterGrantedPermission) => {
+  updateGrantedPermission = (userPermissions: PoterGrantedPermission) => {
     this.grantedPermissions = userPermissions || {}
   }
 
@@ -35,7 +35,7 @@ export class CToter {
     return actions.every((action) => perm.includes(action))
   }
 
-  private auth = (params: ToterAuth) => {
+  private auth = (params: PoterAuth) => {
     const userPermission = this.grantedPermissions
     const { resource, actions = [] } = params
     if (resource instanceof RegExp) {
@@ -54,7 +54,7 @@ export class CToter {
     return this.judge(actions, perm)
   }
 
-  check = (params: ToterAuthParams) => {
+  check = (params: PoterAuthParams) => {
     const { requiredPermissions, oneOfPerm } = params
     if (Array.isArray(requiredPermissions) && requiredPermissions.length) {
       let count = 0
@@ -118,51 +118,61 @@ export class CToter {
  * - 通过 init(routes, permissions) 构造内部实例
  * - 其他方法代理到实例；未初始化时采取安全兜底
  */
-const Toter = {
+const Poter = {
   _instance: undefined as CToter | undefined,
   // 初始化标记与任务队列
   _queue: [] as Array<() => Promise<unknown>>, // 任务为返回 Promise 的函数
   _flushing: false,
 
-  init(routes: ToterRoute[], userPermissions: ToterGrantedPermission) {
+  init(routes: PoterRoute[], userPermissions: PoterGrantedPermission) {
     this._instance = new CToter(routes, userPermissions)
     // 初始化完成后尝试刷新队列
     void this._flush()
-    emitToterInit()
-  },
-
-  updateUserPermission(userPermissions: ToterGrantedPermission) {
-    if (this._instance) {
-      this._instance.updateGrantedPermission(userPermissions)
-      emitToterUpdate()
-    } else {
-      // 若未初始化，入队延后应用
-      this._enqueue(async () => {
-        this._instance!.updateGrantedPermission(userPermissions)
-        emitToterUpdate()
-      })
-    }
+    emitPoterInit()
   },
 
   /**
-   * @summary 鉴权：未初始化时返回 true，避免误伤渲染；
-   * @param url - 目标路径
+   * 同步路由鉴权（未初始化时安全返回 true）
    */
   authentication(url: string): boolean {
     return this._instance ? this._instance.authentication(url) : true
   },
 
-  /**
-   * @summary 异步鉴权：未初始化时入队，初始化后返回鉴权结果
-   */
-  authenticationAsync(url: string): Promise<boolean> {
+  updateUserPermission(userPermissions: PoterGrantedPermission) {
     if (this._instance) {
-      return Promise.resolve(this._instance.authentication(url))
+      this._instance.updateGrantedPermission(userPermissions)
+      emitPoterUpdate()
+    } else {
+      // 若未初始化，入队延后应用
+      this._enqueue(async () => {
+        this._instance!.updateGrantedPermission(userPermissions)
+        emitPoterUpdate()
+      })
     }
-    return this._enqueue(async () => this._instance!.authentication(url))
   },
 
-  check(params: ToterAuthParams) {
+  /**
+   * @summary 路由鉴权；
+   * @param url - 目标路径
+   */
+  authRoute(
+    url: string,
+    options?: {
+      waitInit?: boolean
+      defaultValue?: boolean
+    },
+  ): boolean | Promise<boolean> {
+    const { waitInit = false, defaultValue = false } = options || {}
+    if (waitInit) {
+      if (this._instance) {
+        return Promise.resolve(this._instance.authentication(url))
+      }
+      return this._enqueue(async () => this._instance!.authentication(url))
+    }
+    return this._instance ? this._instance.authentication(url) : defaultValue
+  },
+
+  check(params: PoterAuthParams) {
     return this._instance ? this._instance.check(params) : true
   },
 
@@ -221,4 +231,4 @@ const Toter = {
   },
 }
 
-export default Toter
+export default Poter

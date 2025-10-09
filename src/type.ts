@@ -1,17 +1,17 @@
-export type ToterGrantedPermission = Record<string, string[]>
+export type PoterGrantedPermission = Record<string, string[]>
 
-export type ToterAuth = {
+export type PoterAuth = {
   resource: string | RegExp
   actions?: string[]
 }
 
-export interface ToterAuthParams {
-  requiredPermissions?: Array<ToterAuth>
+export interface PoterAuthParams {
+  requiredPermissions?: Array<PoterAuth>
   oneOfPerm?: boolean
 }
 
-export type ToterRoute = {
+export type PoterRoute = {
   url: string
-  requiredPermissions?: Array<ToterAuth>
+  requiredPermissions?: Array<PoterAuth>
   oneOfPerm?: boolean
 }

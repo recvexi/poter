@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react"
 
+import { EPoterEventKeys, poterEmitter } from "@/events"
+import Poter from "@/index"
 
-import { toterEmitter } from "@/events"
-import Toter from "@/index"
+import type { PoterAuthParams } from "@/type"
 
-import type { ToterAuthParams } from "@/type"
-
-type PermissionWrapperProps = ToterAuthParams & {
+type PermissionWrapperProps = PoterAuthParams & {
   backup?: React.ReactNode
 }
 
@@ -15,16 +14,16 @@ const PermissionWrapper = (props: React.PropsWithChildren<PermissionWrapperProps
   const [hasPermission, setHasPermission] = useState(false)
   const [permissions, setPermissions] = useState<Record<string, string[]>>({})
   const fetchPermissions = () => {
-    const p = Toter._instance?.getPermissions()
+    const p = Poter._instance?.getPermissions()
     setPermissions(p || {})
   }
   useEffect(() => {
-    toterEmitter.on("toter:init", fetchPermissions)
-    toterEmitter.on("toter:updateUserPermission", fetchPermissions)
+    poterEmitter.on(EPoterEventKeys.Init, fetchPermissions)
+    poterEmitter.on(EPoterEventKeys.UpdateGrantedPermission, fetchPermissions)
   }, [])
 
   useEffect(() => {
-    const has = Toter.check({ requiredPermissions, oneOfPerm })
+    const has = Poter.check({ requiredPermissions, oneOfPerm })
     setHasPermission(has)
   }, [requiredPermissions, oneOfPerm, permissions])
 

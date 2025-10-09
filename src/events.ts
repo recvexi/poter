@@ -1,11 +1,16 @@
 import mitt from "mitt"
 
-export type ToterEvents = {
-  "toter:init": void
-  "toter:updateUserPermission": void
+export const EPoterEventKeys = {
+  Init: "poter:init",
+  UpdateGrantedPermission: "poter:updateGrantedPermission",
+} as const
+
+export type PoterEvents = {
+  [EPoterEventKeys.Init]: void
+  [EPoterEventKeys.UpdateGrantedPermission]: void
 }
 
-export const toterEmitter = mitt<ToterEvents>()
+export const poterEmitter = mitt<PoterEvents>()
 
-export const emitToterInit = () => toterEmitter.emit("toter:init")
-export const emitToterUpdate = () => toterEmitter.emit("toter:updateUserPermission")
+export const emitPoterInit = () => poterEmitter.emit(EPoterEventKeys.Init)
+export const emitPoterUpdate = () => poterEmitter.emit(EPoterEventKeys.UpdateGrantedPermission)
