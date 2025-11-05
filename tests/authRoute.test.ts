@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 
 import Poter from "../src/instance"
 
-import type { CToter } from "../src/instance"
+import type { CPoter } from "../src/instance"
 import type { PoterGrantedPermission, PoterRoute } from "../src/type"
 
 vi.mock("@tarojs/taro", () => {
@@ -21,7 +21,7 @@ describe("authRoute waitInit & defaultValue", () => {
 
   beforeEach(() => {
     // 重置单例内部状态
-    Poter._instance = undefined as unknown as CToter
+    Poter._instance = undefined as unknown as CPoter
     Poter._queue = [] as Array<() => Promise<unknown>>
     Poter._flushing = false as boolean
   })

@@ -8,7 +8,7 @@ import type { PoterAuth, PoterAuthParams, PoterRoute, PoterGrantedPermission } f
  * @summary 权限控制类（实例化版本）
  * @description  通过构造函数注入 routes 与 grantedPermissions;
  */
-export class CToter {
+export class CPoter {
   private routes: PoterRoute[]
   private grantedPermissions: PoterGrantedPermission
 
@@ -119,36 +119,36 @@ export class CToter {
  * - 其他方法代理到实例；未初始化时采取安全兜底
  */
 const Poter = {
-  _instance: undefined as CToter | undefined,
+  _instance: undefined as CPoter | undefined,
   // 初始化标记与任务队列
   _queue: [] as Array<() => Promise<unknown>>, // 任务为返回 Promise 的函数
   _flushing: false,
 
-  init(routes: PoterRoute[], userPermissions: PoterGrantedPermission) {
-    this._instance = new CToter(routes, userPermissions)
+  init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission) {
+    this._instance = new CPoter(routes, grantedPermissions)
     // 初始化完成后尝试刷新队列
     void this._flush()
     emitPoterInit()
   },
 
   /**
-   * 同步路由鉴权（未初始化时安全返回 true）
+   * @summary 同步路由鉴权
    */
-  authentication(url: string): boolean {
-    return this._instance ? this._instance.authentication(url) : true
+  authenticationPath(url: string): boolean {
+    return this._instance ? this._instance.authentication(url) : false
   },
 
   updateUserPermission(userPermissions: PoterGrantedPermission) {
     if (this._instance) {
       this._instance.updateGrantedPermission(userPermissions)
       emitPoterUpdate()
-    } else {
-      // 若未初始化，入队延后应用
-      this._enqueue(async () => {
-        this._instance!.updateGrantedPermission(userPermissions)
-        emitPoterUpdate()
-      })
+      return
     }
+    // 若未初始化，入队延后应用
+    this._enqueue(async () => {
+      this._instance!.updateGrantedPermission(userPermissions)
+      emitPoterUpdate()
+    })
   },
 
   /**
@@ -172,6 +172,9 @@ const Poter = {
     return this._instance ? this._instance.authentication(url) : defaultValue
   },
 
+  /**
+   * @summary 资源鉴权；
+   */
   check(params: PoterAuthParams) {
     return this._instance ? this._instance.check(params) : true
   },

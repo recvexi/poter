@@ -1,4 +1,4 @@
-## Poter · 基于资源-动作的权限控制与路由守卫
+# Poter · 基于资源-动作的权限控制与路由守卫
 
 > 版本变更请查看 [CHANGELOG](./CHANGELOG.md)
 
@@ -21,13 +21,13 @@
 
 ```bash
 # pnpm
-pnpm add poter @tarojs/taro react
+pnpm add poter
 
 # npm
-npm i poter @tarojs/taro react
+npm i poter
 
 # yarn
-yarn add poter @tarojs/taro react
+yarn add poter
 ```
 
 导入：
@@ -97,10 +97,10 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 
 // 组件：基于权限包裹 UI
 <PermissionWrapper
-	requiredPermissions={[{ resource: "article", actions: ["read"] }]}
-	backup={<span>无权限</span>}
+ requiredPermissions={[{ resource: "article", actions: ["read"] }]}
+ backup={<span>无权限</span>}
 >
-	<YourComponent />
+ <YourComponent />
 </PermissionWrapper>
 ```
 
@@ -139,7 +139,6 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 
 - authentication(url: string): boolean
   - 根据预设 routes 判断是否可访问
-  - 未初始化时，安全默认值为 true（避免误伤渲染）
 
 - authRoute(url: string, options?: { waitInit?: boolean; defaultValue?: boolean }): boolean | Promise<boolean>
   - waitInit = false（默认）：未初始化时直接返回 defaultValue（默认 false，不入队）
@@ -163,8 +162,6 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 针对路由 url 的异步权限鉴权 Hook，内部监听权限初始化与更新事件自动刷新。
 
 源码签名：`useRoutePermission(url: string, options?: { immediate?: boolean; defaultValue?: boolean }, deps: ReadonlyArray<unknown> = [])`
-
-注意：依赖数组是第三个独立参数，不在 options 内。
 
 ```ts
 interface UseRoutePermissionOptions {
@@ -209,15 +206,6 @@ type PermissionWrapperProps = {
 - PoterAuthParams = { requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
 - PoterRoute = { url: string; requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
 
-## 事件说明（内部）
-
-库内部使用 mitt 维护两个事件：
-
-- "toter:init" – 初始化完成时派发
-- "toter:updateUserPermission" – 用户权限更新时派发
-
-Hook 与组件已内置订阅这两个事件，无需在业务侧直接使用。
-
 ## 构建与测试
 
 要求 Node >= 20.19。构建使用 Vite，输出 ESM 与 CJS：
@@ -233,10 +221,17 @@ pnpm run test           # 运行单元测试（vitest）
 pnpm run build          # 构建库（产物位于 dist/）
 ```
 
+- 测试说明：项目使用 Vitest。你可以在仓库根目录运行下列命令来执行测试：
+
+```bash
+pnpm install
+pnpm run test
+```
+
 ## 设计细节与边界
 
 - 未初始化行为
-  - authentication 返回 true（安全默认值，用于同步快速判断）
+  - authentication 返回 false
   - authRoute(url,{waitInit:false}) 直接返回 defaultValue（默认 false，不触发排队）
   - authRoute(url,{waitInit:true}) / 导航 API 会入队等待 init 完成后再执行并返回真实结果
 - 导航异常

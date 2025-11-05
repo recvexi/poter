@@ -1,7 +1,7 @@
 import Taro from "@tarojs/taro"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import Poter, { CToter } from "../src/instance"
+import Poter, { CPoter } from "../src/instance"
 
 import type { PoterRoute, PoterGrantedPermission } from "../src/type"
 
@@ -34,10 +34,10 @@ describe("Toter instance", () => {
     "sys:role": ["manage"],
   }
 
-  let toter: CToter
+  let toter: CPoter
 
   beforeEach(() => {
-    toter = new CToter(routes, perms)
+    toter = new CPoter(routes, perms)
   })
 
   it("authentication passes for permitted route", () => {
@@ -70,13 +70,14 @@ describe("Toter manager singleton", () => {
 
   beforeEach(() => {
     // 重置内部状态
-    Poter._instance = undefined as unknown as CToter
+    Poter._instance = undefined as unknown as CPoter
     Poter._queue = [] as Array<Task>
     Poter._flushing = false as boolean
   })
 
-  it("authentication returns true before init (safe default)", () => {
-    expect(Poter.authentication("/c")).toBe(true)
+  it("authentication returns false before init (safe default)", () => {
+    // 默认未初始化时返回 false（在 0.2.0 中更新为更明确的安全语义）
+    expect(Poter.authenticationPath("/c")).toBe(false)
   })
 
   it("queue calls before init and flush after init", async () => {

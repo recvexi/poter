@@ -2,9 +2,26 @@
 
 遵循 Keep a Changelog 格式，版本号遵循 SemVer。
 
+## [0.2.0] - 2025-11-05
+
+### Changed (0.2.0)
+
+- 重命名 `CToter` 为 `CPoter`，并统一导出/测试用例中的引用（`src/instance.ts`、`tests/*` 已同步更新）。
+- `Poter.init` 的第二个参数名称由 `userPermissions` 调整为 `grantedPermissions`（代码与注释中已同步）。
+- 修改并整理单例管理器的行为：
+  - 将同步鉴权方法名从 `authentication` 改为 `authenticationPath`，并调整其未初始化时的默认返回值（由原先的 `true` 改为 `false`，以便更明确地表达不同场景下的安全语义）；
+  - `updateUserPermission` 在存在内部实例时将立即应用并返回；当尚未初始化时，会将更新入队列等待初始化后执行。
+
+- 修正并明确了队列（enqueue/flush）逻辑，确保初始化后能正确串行刷新的调用顺序与错误传播。
+- 更新了 `README.md`，加入迁移提示（关于 `CToter` -> `CPoter`）与测试运行说明。
+
+### Fixed (0.2.0)
+
+- 修复了队列刷新/入队在竞态情况下的处理细节，避免初始化期间的任务丢失或重复触发。
+
 ## [0.1.0] - 2025-10-09
 
-### Changed
+### Changed (0.1.0)
 
 - `useRoutePermission` Hook 内部改为使用 `authRoute(url,{ waitInit:true })` 实现异步等待初始化。
 - 统一命名：对外与内部类型/实例统一使用 `Poter*` 前缀（移除遗留 `Toter*` 导出与示例）。
