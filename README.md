@@ -51,19 +51,19 @@ const routes: PoterRoute[] = [
 
 // 当前用户已授予权限：资源 -> 动作
 // 支持通配符：例如 ["*"] 代表该资源下的所有动作
-const userPermissions: PoterGrantedPermission = {
+const grantedPermissions: PoterGrantedPermission = {
   article: ["read"],
   "sys:role": ["manage"],
 }
 
-Poter.init(routes, userPermissions)
+Poter.init(routes, grantedPermissions)
 ```
 
 ### 2) 在代码里做权限判断
 
 ```ts
 // 根据 url 判断是否可访问（若路由未配置权限，默认放行）
-const canVisit = Poter.authentication("/pages/article/index")
+const canVisit = Poter.authenticationPath("/pages/article/index")
 
 // 自定义校验：传入所需权限数组
 const allowed = Poter.check({
@@ -121,7 +121,7 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
   - RegExp：对所有 key 做匹配，必须全部匹配项都满足 actions 要求
 
 - actions 判断规则：
-  - 若对应资源的权限数组 join("") === "_"（如 ["_"]），视为对该资源下所有动作放行
+  - 若对应资源的权限数组为 `["*"]`（即 `join("") === "*"`），视为对该资源下所有动作放行
   - 否则要求 actions 中的每个动作均包含在权限数组中
 
 - 路由未配置 requiredPermissions 时，默认放行
@@ -130,15 +130,17 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 
 ### 默认导出：Poter（单例管理器）
 
-- init(routes: PoterRoute[], userPermissions: PoterGrantedPermission): void
+- init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission): void
   - 构造内部实例并触发事件通知（组件/Hook 会自动刷新）
   - 初始化完成后会自动刷新排队中的调用
 
 - updateUserPermission(userPermissions: PoterGrantedPermission): void
   - 更新当前用户权限并触发刷新
+  - 若尚未初始化，会将更新入队，待 `init` 完成后执行
 
-- authentication(url: string): boolean
+- authenticationPath(url: string): boolean
   - 根据预设 routes 判断是否可访问
+  - 未初始化时返回 `false`
 
 - authRoute(url: string, options?: { waitInit?: boolean; defaultValue?: boolean }): boolean | Promise<boolean>
   - waitInit = false（默认）：未初始化时直接返回 defaultValue（默认 false，不入队）
@@ -146,6 +148,7 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 
 - check(params: PoterAuthParams): boolean
   - 自定义校验：传 requiredPermissions 与 oneOfPerm
+  - 未初始化时返回 `true`（视为放行，与 `authenticationPath` 的安全默认不同）
 
 - navigateTo(options: Taro.navigateTo.Option): Promise<unknown>
 - redirectTo(options: Taro.redirectTo.Option): Promise<unknown>
@@ -221,19 +224,20 @@ pnpm run test           # 运行单元测试（vitest）
 pnpm run build          # 构建库（产物位于 dist/）
 ```
 
-- 测试说明：项目使用 Vitest。你可以在仓库根目录运行下列命令来执行测试：
+## 从 0.1.x 迁移到 0.2.0
 
-```bash
-pnpm install
-pnpm run test
-```
+- 单例同步鉴权方法由 `authentication` 重命名为 `authenticationPath`；未初始化时默认返回值由 `true` 改为 `false`
+- `init` 的第二个参数在类型签名中命名为 `grantedPermissions`（语义不变，仍为用户已授予权限）
+- 内部类由 `CToter` 重命名为 `CPoter`（仅影响直接引用内部实现的场景）
 
 ## 设计细节与边界
 
 - 未初始化行为
-  - authentication 返回 false
-  - authRoute(url,{waitInit:false}) 直接返回 defaultValue（默认 false，不触发排队）
-  - authRoute(url,{waitInit:true}) / 导航 API 会入队等待 init 完成后再执行并返回真实结果
+  - `authenticationPath` 返回 `false`
+  - `check` 返回 `true`（自定义校验默认放行；`PermissionWrapper` 在未初始化时也会因此显示 children）
+  - `authRoute(url,{waitInit:false})` 直接返回 defaultValue（默认 false，不触发排队）
+  - `authRoute(url,{waitInit:true})` / 导航 API 会入队等待 init 完成后再执行并返回真实结果
+  - `updateUserPermission` 会入队，待 init 后应用
 - 导航异常
   - 无权限时抛出 { code: 401, message: "权限验证失败" }
 - 正则资源
