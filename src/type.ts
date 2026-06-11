@@ -15,3 +15,15 @@ export type PoterRoute = {
   requiredPermissions?: Array<PoterAuth>
   oneOfPerm?: boolean
 }
+
+export type PoterOptions = {
+  /** navigateBack 失败时跳转的 tab 页路径；未配置则不自动跳转 */
+  navigateBackFallback?: string
+}
+
+export type PoterAsyncOptions = {
+  /** 未初始化时是否入队等待 init 完成后再鉴权 */
+  waitInit?: boolean
+  /** waitInit=false 且未初始化时的返回值，默认 false */
+  defaultValue?: boolean
+}

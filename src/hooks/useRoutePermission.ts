@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { poterEmitter, EPoterEventKeys } from "../events"
 import Poter from "../instance"
+import { resolvePoterResult } from "../utils"
 
 export interface UseRoutePermissionOptions {
   /** 组件挂载后是否立即发起一次异步鉴权 */
@@ -32,8 +33,7 @@ export function useRoutePermission(
     setLoading(true)
     setError(null)
     try {
-      const result = await Poter.authRoute(url, { waitInit: true })
-      const ok = typeof result === "boolean" ? result : await result
+      const ok = await resolvePoterResult(Poter.authRoute(url, { waitInit: true }))
       if (aliveRef.current) setCanAccess(ok)
       return ok
     } catch (e) {

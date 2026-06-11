@@ -33,7 +33,15 @@ yarn add poter
 导入：
 
 ```ts
-import Poter, { PermissionWrapper, useRoutePermission, type PoterRoute, type PoterGrantedPermission } from "poter"
+import Poter, {
+  CPoter,
+  PoterAuthError,
+  PermissionWrapper,
+  useRoutePermission,
+  type PoterRoute,
+  type PoterGrantedPermission,
+  type PoterOptions,
+} from "poter"
 ```
 
 ## 快速开始
@@ -41,47 +49,58 @@ import Poter, { PermissionWrapper, useRoutePermission, type PoterRoute, type Pot
 ### 1) 定义路由与用户权限并初始化
 
 ```ts
-import Poter, { type PoterRoute, type PoterGrantedPermission } from "poter"
+import Poter, { type PoterRoute, type PoterGrantedPermission, type PoterOptions } from "poter"
 
-// 路由权限需求（可选 oneOfPerm：任一满足即通过；默认需要全部满足）
 const routes: PoterRoute[] = [
   { url: "/pages/article/index", requiredPermissions: [{ resource: "article", actions: ["read"] }] },
   { url: "/pages/sys/index", requiredPermissions: [{ resource: /^sys:.+$/, actions: ["manage"] }], oneOfPerm: true },
 ]
 
-// 当前用户已授予权限：资源 -> 动作
-// 支持通配符：例如 ["*"] 代表该资源下的所有动作
 const grantedPermissions: PoterGrantedPermission = {
   article: ["read"],
   "sys:role": ["manage"],
 }
 
-Poter.init(routes, grantedPermissions)
+const options: PoterOptions = {
+  navigateBackFallback: "/pages/index/index", // 可选：navigateBack 失败时跳转的 tab 页
+}
+
+Poter.init(routes, grantedPermissions, options)
 ```
 
 ### 2) 在代码里做权限判断
 
 ```ts
-// 根据 url 判断是否可访问（若路由未配置权限，默认放行）
+// 根据 url 判断是否可访问（自动去除 query/hash；若路由未配置权限，默认放行）
 const canVisit = Poter.authenticationPath("/pages/article/index")
 
-// 自定义校验：传入所需权限数组
+// 自定义校验（未初始化时默认返回 false）
 const allowed = Poter.check({
   requiredPermissions: [
     { resource: "article", actions: ["read"] },
     { resource: /^sys:.+$/, actions: ["manage"] },
   ],
-  oneOfPerm: true, // 任一满足即通过
+  oneOfPerm: true,
 })
+
+// 需要等待 init 完成后再鉴权
+const allowedAsync = await Poter.check(
+  { requiredPermissions: [{ resource: "article", actions: ["read"] }] },
+  { waitInit: true },
+)
 ```
 
 ### 3) 使用导航代理（自动鉴权）
 
 ```ts
+import { PoterAuthError } from "poter"
+
 try {
   await Poter.navigateTo({ url: "/pages/article/index" })
 } catch (e) {
-  // 无权限时抛出 { code: 401, message: "权限验证失败" }
+  if (e instanceof PoterAuthError) {
+    // code === 401
+  }
 }
 
 // redirectTo / switchTab 同理；navigateBack 不做权限限制并立即执行
@@ -92,15 +111,14 @@ try {
 ```tsx
 import { useRoutePermission, PermissionWrapper } from "poter"
 
-// 路由权限鉴权 Hook（返回 canAccess/loading/error/refresh）
 const { canAccess, loading, error, refresh } = useRoutePermission("/pages/article/index")
 
-// 组件：基于权限包裹 UI
 <PermissionWrapper
- requiredPermissions={[{ resource: "article", actions: ["read"] }]}
- backup={<span>无权限</span>}
+  requiredPermissions={[{ resource: "article", actions: ["read"] }]}
+  backup={<span>无权限</span>}
+  loading={<span>加载中...</span>}
 >
- <YourComponent />
+  <YourComponent />
 </PermissionWrapper>
 ```
 
@@ -121,8 +139,10 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
   - RegExp：对所有 key 做匹配，必须全部匹配项都满足 actions 要求
 
 - actions 判断规则：
-  - 若对应资源的权限数组为 `["*"]`（即 `join("") === "*"`），视为对该资源下所有动作放行
+  - 若权限数组包含 `"*"`，视为对该资源下所有动作放行
   - 否则要求 actions 中的每个动作均包含在权限数组中
+
+- 路由匹配会自动去除 query/hash，并忽略末尾斜杠（根路径除外）
 
 - 路由未配置 requiredPermissions 时，默认放行
 
@@ -130,11 +150,14 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
 
 ### 默认导出：Poter（单例管理器）
 
-- init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission): void
+- init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission, options?: PoterOptions): void
   - 构造内部实例并触发事件通知（组件/Hook 会自动刷新）
   - 初始化完成后会自动刷新排队中的调用
 
-- updateUserPermission(userPermissions: PoterGrantedPermission): void
+- reset(): void
+  - 清除实例与任务队列（主要用于测试或登出重置）
+
+- updateGrantedPermission(grantedPermissions: PoterGrantedPermission): void
   - 更新当前用户权限并触发刷新
   - 若尚未初始化，会将更新入队，待 `init` 完成后执行
 
@@ -142,52 +165,46 @@ const { canAccess, loading, error, refresh } = useRoutePermission("/pages/articl
   - 根据预设 routes 判断是否可访问
   - 未初始化时返回 `false`
 
-- authRoute(url: string, options?: { waitInit?: boolean; defaultValue?: boolean }): boolean | Promise<boolean>
+- authRoute(url: string, options?: PoterAsyncOptions): boolean | Promise<boolean>
   - waitInit = false（默认）：未初始化时直接返回 defaultValue（默认 false，不入队）
   - waitInit = true：若未初始化则入队等待，最终返回真实鉴权结果（始终 Promise）
 
-- check(params: PoterAuthParams): boolean
+- check(params: PoterAuthParams, options?: PoterAsyncOptions): boolean | Promise<boolean>
   - 自定义校验：传 requiredPermissions 与 oneOfPerm
-  - 未初始化时返回 `true`（视为放行，与 `authenticationPath` 的安全默认不同）
+  - 未初始化且 waitInit = false 时返回 defaultValue（默认 false）
+  - waitInit = true 时入队等待 init 后返回真实结果
 
-- navigateTo(options: Taro.navigateTo.Option): Promise<unknown>
-- redirectTo(options: Taro.redirectTo.Option): Promise<unknown>
-- switchTab(options: Taro.switchTab.Option): Promise<unknown>
-  - 导航前会进行权限校验，失败抛出 { code: 401, message: "权限验证失败" }
+- navigateTo / redirectTo / switchTab
+  - 导航前会进行权限校验，失败抛出 `PoterAuthError`（code: 401）
 
 - navigateBack(options?: Taro.navigateBack.Option): Promise<unknown>
   - 不做权限限制，立即执行
+  - 若在 `PoterOptions.navigateBackFallback` 中配置了路径，`navigateBack` 失败时会 `switchTab` 到该页
 
 > 队列语义：在 init 之前调用的鉴权/导航，会被排队等待初始化完成后串行执行，避免竞态问题。
 
+### 类：CPoter
+
+可直接实例化，适合非单例场景或单元测试：
+
+```ts
+import { CPoter } from "poter"
+
+const poter = new CPoter(routes, grantedPermissions, { navigateBackFallback: "/pages/index/index" })
+poter.authenticationPath("/pages/article/index")
+poter.updateGrantedPermission({ article: ["read"] })
+```
+
 ### Hook：useRoutePermission(url, options?, deps?)
-
-针对路由 url 的异步权限鉴权 Hook，内部监听权限初始化与更新事件自动刷新。
-
-源码签名：`useRoutePermission(url: string, options?: { immediate?: boolean; defaultValue?: boolean }, deps: ReadonlyArray<unknown> = [])`
 
 ```ts
 interface UseRoutePermissionOptions {
-  immediate?: boolean // 默认 true，挂载后立即鉴权
-  defaultValue?: boolean // 默认 false（初始 canAccess）
+  immediate?: boolean // 默认 true
+  defaultValue?: boolean // 默认 false
 }
-
-// 基础用法（立即鉴权）
-const { canAccess, loading } = useRoutePermission("/pages/article/index")
-
-// 自定义默认值 & 禁用挂载立即鉴权
-const p = useRoutePermission("/pages/article/index", { immediate: false, defaultValue: true })
-
-// 带额外依赖（依赖变化会重新触发 refresh）
-const { canAccess, refresh } = useRoutePermission(dynamicUrl, { immediate: true }, [dynamicUrl, userId])
 ```
 
-返回字段：
-
-- canAccess: boolean 当前是否允许访问
-- loading: boolean 当前是否在执行鉴权
-- error: unknown 鉴权异常（通常不抛，但保留）
-- refresh: () => Promise<boolean> 手动重新鉴权
+返回：`canAccess`、`loading`、`error`、`refresh`
 
 ### 组件：<PermissionWrapper />
 
@@ -196,54 +213,55 @@ type PermissionWrapperProps = {
   requiredPermissions?: Array<{ resource: string | RegExp; actions?: string[] }>
   oneOfPerm?: boolean
   backup?: React.ReactNode // 无权限时的兜底渲染
+  loading?: React.ReactNode // 鉴权等待中的兜底渲染
 }
 ```
 
-- 根据 requiredPermissions/oneOfPerm 判定是否渲染 children，否则渲染 backup（或 null）
-- 内部会在权限初始化/变更后自动刷新
+- 内部通过 `check({ waitInit: true })` 异步鉴权，init 前不会误放行 children
+- 权限初始化/变更后自动刷新
 
-### 类型导出
+### 类型与错误导出
 
-- PoterGrantedPermission = Record<string, string[]>
-- PoterAuth = { resource: string | RegExp; actions?: string[] }
-- PoterAuthParams = { requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
-- PoterRoute = { url: string; requiredPermissions?: PoterAuth[]; oneOfPerm?: boolean }
+- PoterGrantedPermission、PoterAuth、PoterAuthParams、PoterRoute
+- PoterOptions、PoterAsyncOptions
+- PoterAuthError
 
 ## 构建与测试
 
-要求 Node >= 20.19。构建使用 Vite，输出 ESM 与 CJS：
-
-- dist/poter.mjs
-- dist/poter.cjs
-
-常用脚本：
+要求 Node >= 20.19。
 
 ```bash
-pnpm install            # 安装依赖
-pnpm run test           # 运行单元测试（vitest）
-pnpm run build          # 构建库（产物位于 dist/）
+pnpm install
+pnpm run test
+pnpm run build
 ```
 
-## 从 0.1.x 迁移到 0.2.0
+## 迁移指南
 
-- 单例同步鉴权方法由 `authentication` 重命名为 `authenticationPath`；未初始化时默认返回值由 `true` 改为 `false`
-- `init` 的第二个参数在类型签名中命名为 `grantedPermissions`（语义不变，仍为用户已授予权限）
-- 内部类由 `CToter` 重命名为 `CPoter`（仅影响直接引用内部实现的场景）
+### 0.2.x → 0.3.0
+
+- `updateUserPermission` 重命名为 `updateGrantedPermission`
+- `CPoter.authentication` 重命名为 `authenticationPath`
+- `check` 未初始化时由返回 `true` 改为返回 `false`；支持 `{ waitInit, defaultValue }` 选项
+- 导航失败改为抛出 `PoterAuthError` 实例（仍含 `code: 401`）
+- `navigateBack` 不再硬编码 `/pages/index/index`，改为通过 `PoterOptions.navigateBackFallback` 配置
+- 新增 `Poter.reset()`；`CPoter` 从包入口正式导出
+
+### 0.1.x → 0.2.0
+
+- 单例同步鉴权方法由 `authentication` 重命名为 `authenticationPath`
+- `init` 第二参数命名为 `grantedPermissions`
+- 内部类由 `CToter` 重命名为 `CPoter`
 
 ## 设计细节与边界
 
-- 未初始化行为
-  - `authenticationPath` 返回 `false`
-  - `check` 返回 `true`（自定义校验默认放行；`PermissionWrapper` 在未初始化时也会因此显示 children）
-  - `authRoute(url,{waitInit:false})` 直接返回 defaultValue（默认 false，不触发排队）
-  - `authRoute(url,{waitInit:true})` / 导航 API 会入队等待 init 完成后再执行并返回真实结果
-  - `updateUserPermission` 会入队，待 init 后应用
-- 导航异常
-  - 无权限时抛出 { code: 401, message: "权限验证失败" }
-- 正则资源
-  - 会匹配到的所有资源都需满足 actions 判定
-- 通配符权限
-  - 将资源权限设为 ["*"]，代表对该资源下的任意动作放行
+- 未初始化行为（默认均为保守策略）
+  - `authenticationPath` / `check`（waitInit=false）/ `authRoute`（waitInit=false）均返回 `false`
+  - `check` / `authRoute` 设置 `waitInit: true` 时入队等待
+  - 导航 API 与 `updateGrantedPermission` 会入队等待 init
+- 导航异常：抛出 `PoterAuthError`
+- 正则资源：匹配到的所有资源都需满足 actions 判定
+- 通配符：权限数组包含 `"*"` 即放行该资源的所有动作
 
 ## 许可
 

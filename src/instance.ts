@@ -1,35 +1,39 @@
 import Taro from "@tarojs/taro"
 
+import { PoterAuthError } from "@/error"
 import { emitPoterInit, emitPoterUpdate } from "@/events"
+import { normalizePath } from "@/utils"
 
-import type { PoterAuth, PoterAuthParams, PoterRoute, PoterGrantedPermission } from "@/type"
+import type { PoterAuth, PoterAuthParams, PoterAsyncOptions, PoterOptions, PoterRoute, PoterGrantedPermission } from "@/type"
 
 /**
  * @summary 权限控制类（实例化版本）
- * @description  通过构造函数注入 routes 与 grantedPermissions;
+ * @description 通过构造函数注入 routes 与 grantedPermissions
  */
 export class CPoter {
   private routes: PoterRoute[]
   private grantedPermissions: PoterGrantedPermission
+  private options: PoterOptions
 
-  constructor(routes: PoterRoute[], userPermissions: PoterGrantedPermission) {
+  constructor(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission, options: PoterOptions = {}) {
     this.routes = routes || []
-    this.grantedPermissions = userPermissions || {}
+    this.grantedPermissions = grantedPermissions || {}
+    this.options = options
   }
 
   getPermissions() {
     return this.grantedPermissions
   }
 
-  updateGrantedPermission = (userPermissions: PoterGrantedPermission) => {
-    this.grantedPermissions = userPermissions || {}
+  updateGrantedPermission = (grantedPermissions: PoterGrantedPermission) => {
+    this.grantedPermissions = grantedPermissions || {}
   }
 
   private judge = (actions: string[], perm: string[]) => {
     if (!perm || !perm.length) {
       return false
     }
-    if (perm.join("") === "*") {
+    if (perm.includes("*")) {
       return true
     }
     return actions.every((action) => perm.includes(action))
@@ -68,8 +72,9 @@ export class CPoter {
     return true
   }
 
-  authentication(url: string) {
-    const route = this.routes.find((item) => item.url === url)
+  authenticationPath(url: string) {
+    const normalized = normalizePath(url)
+    const route = this.routes.find((item) => normalizePath(item.url) === normalized)
     if (!route) return true
     return this.check({
       requiredPermissions: route.requiredPermissions,
@@ -78,37 +83,40 @@ export class CPoter {
   }
 
   navigateTo = async (options: Taro.navigateTo.Option) => {
-    const canAccess = this.authentication(options.url)
+    const canAccess = this.authenticationPath(options.url)
     if (canAccess) {
       return Taro.navigateTo(options)
     }
-    throw { code: 401, message: "权限验证失败" }
+    throw new PoterAuthError()
   }
 
   redirectTo = async (options: Taro.redirectTo.Option) => {
-    const canAccess = this.authentication(options.url)
+    const canAccess = this.authenticationPath(options.url)
     if (canAccess) {
       return Taro.redirectTo(options)
     }
-    throw { code: 401, message: "权限验证失败" }
+    throw new PoterAuthError()
   }
 
   switchTab = async (options: Taro.switchTab.Option) => {
-    const canAccess = this.authentication(options.url)
+    const canAccess = this.authenticationPath(options.url)
     if (canAccess) {
       return Taro.switchTab(options)
     }
-    throw { code: 401, message: "权限验证失败" }
+    throw new PoterAuthError()
   }
 
   navigateBack = async (options?: Taro.navigateBack.Option) => {
+    const { fail, ...rest } = options || {}
+    const fallback = this.options.navigateBackFallback
     return Taro.navigateBack({
-      fail: () => {
-        Taro.switchTab({
-          url: "/pages/index/index",
-        })
+      ...rest,
+      fail: (res) => {
+        if (fallback) {
+          void Taro.switchTab({ url: fallback })
+        }
+        fail?.(res)
       },
-      ...options,
     })
   }
 }
@@ -120,63 +128,60 @@ export class CPoter {
  */
 const Poter = {
   _instance: undefined as CPoter | undefined,
-  // 初始化标记与任务队列
-  _queue: [] as Array<() => Promise<unknown>>, // 任务为返回 Promise 的函数
+  _options: {} as PoterOptions,
+  _queue: [] as Array<() => Promise<unknown>>,
   _flushing: false,
 
-  init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission) {
-    this._instance = new CPoter(routes, grantedPermissions)
-    // 初始化完成后尝试刷新队列
+  init(routes: PoterRoute[], grantedPermissions: PoterGrantedPermission, options?: PoterOptions) {
+    this._options = options || {}
+    this._instance = new CPoter(routes, grantedPermissions, this._options)
     void this._flush()
     emitPoterInit()
   },
 
-  /**
-   * @summary 同步路由鉴权
-   */
-  authenticationPath(url: string): boolean {
-    return this._instance ? this._instance.authentication(url) : false
+  reset() {
+    this._instance = undefined
+    this._options = {}
+    this._queue = []
+    this._flushing = false
   },
 
-  updateUserPermission(userPermissions: PoterGrantedPermission) {
+  authenticationPath(url: string): boolean {
+    return this._instance ? this._instance.authenticationPath(url) : false
+  },
+
+  updateGrantedPermission(grantedPermissions: PoterGrantedPermission) {
     if (this._instance) {
-      this._instance.updateGrantedPermission(userPermissions)
+      this._instance.updateGrantedPermission(grantedPermissions)
       emitPoterUpdate()
       return
     }
-    // 若未初始化，入队延后应用
     this._enqueue(async () => {
-      this._instance!.updateGrantedPermission(userPermissions)
+      this._instance!.updateGrantedPermission(grantedPermissions)
       emitPoterUpdate()
     })
   },
 
-  /**
-   * @summary 路由鉴权；
-   * @param url - 目标路径
-   */
-  authRoute(
-    url: string,
-    options?: {
-      waitInit?: boolean
-      defaultValue?: boolean
-    },
-  ): boolean | Promise<boolean> {
+  authRoute(url: string, options?: PoterAsyncOptions): boolean | Promise<boolean> {
     const { waitInit = false, defaultValue = false } = options || {}
     if (waitInit) {
       if (this._instance) {
-        return Promise.resolve(this._instance.authentication(url))
+        return Promise.resolve(this._instance.authenticationPath(url))
       }
-      return this._enqueue(async () => this._instance!.authentication(url))
+      return this._enqueue(async () => this._instance!.authenticationPath(url))
     }
-    return this._instance ? this._instance.authentication(url) : defaultValue
+    return this._instance ? this._instance.authenticationPath(url) : defaultValue
   },
 
-  /**
-   * @summary 资源鉴权；
-   */
-  check(params: PoterAuthParams) {
-    return this._instance ? this._instance.check(params) : true
+  check(params: PoterAuthParams, options?: PoterAsyncOptions): boolean | Promise<boolean> {
+    const { waitInit = false, defaultValue = false } = options || {}
+    if (waitInit) {
+      if (this._instance) {
+        return Promise.resolve(this._instance.check(params))
+      }
+      return this._enqueue(async () => this._instance!.check(params))
+    }
+    return this._instance ? this._instance.check(params) : defaultValue
   },
 
   navigateTo(options: Taro.navigateTo.Option) {
@@ -192,11 +197,9 @@ const Poter = {
     return this._enqueue(() => this._instance!.switchTab(options))
   },
   navigateBack(options?: Taro.navigateBack.Option) {
-    // 返回行为不依赖权限，仍然即时执行，避免卡住用户
     return this._instance ? this._instance.navigateBack(options) : Taro.navigateBack(options)
   },
 
-  /** 将任务放入队列，返回一个在初始化后执行并可成功/失败结算的 Promise */
   _enqueue<T>(task: () => Promise<T>): Promise<T> {
     return new Promise<T>((resolve, reject) => {
       const wrapped = async () => {
@@ -208,14 +211,12 @@ const Poter = {
         }
       }
       this._queue.push(wrapped)
-      // 若已初始化但仍未触发 flush（竞态），尝试触发
       if (this._instance) {
         void this._flush()
       }
     })
   },
 
-  /** 刷新队列：保证串行执行；flush 过程中入队的新任务会在本轮继续处理，直到队列为空 */
   async _flush() {
     if (this._flushing) return
     if (!this._instance) return

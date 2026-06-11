@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 
 import Poter from "../src/instance"
 
-import type { CPoter } from "../src/instance"
 import type { PoterGrantedPermission, PoterRoute } from "../src/type"
 
 vi.mock("@tarojs/taro", () => {
@@ -20,20 +19,16 @@ describe("authRoute waitInit & defaultValue", () => {
   const routes: PoterRoute[] = [{ url: "/x", requiredPermissions: [{ resource: "x", actions: ["read"] }] }]
 
   beforeEach(() => {
-    // 重置单例内部状态
-    Poter._instance = undefined as unknown as CPoter
-    Poter._queue = [] as Array<() => Promise<unknown>>
-    Poter._flushing = false as boolean
+    Poter.reset()
   })
 
   it("returns defaultValue immediately when not waitInit", () => {
     const r = Poter.authRoute("/x", { waitInit: false, defaultValue: false })
-    expect(r).toBe(false) // 未初始化且 defaultValue=false
+    expect(r).toBe(false)
   })
 
   it("queues and resolves after init when waitInit=true", async () => {
     const p = Poter.authRoute("/x", { waitInit: true }) as Promise<boolean>
-    // 初始化但不给权限 -> 结果应为 false
     Poter.init(routes, {} as PoterGrantedPermission)
     await expect(p).resolves.toBe(false)
   })
@@ -42,6 +37,27 @@ describe("authRoute waitInit & defaultValue", () => {
     const p = Poter.authRoute("/x", { waitInit: true }) as Promise<boolean>
     const perms: PoterGrantedPermission = { x: ["read"] }
     Poter.init(routes, perms)
+    await expect(p).resolves.toBe(true)
+  })
+})
+
+describe("check waitInit & defaultValue", () => {
+  beforeEach(() => {
+    Poter.reset()
+  })
+
+  it("returns defaultValue when not initialized", () => {
+    expect(
+      Poter.check({ requiredPermissions: [{ resource: "x", actions: ["read"] }] }, { defaultValue: false }),
+    ).toBe(false)
+  })
+
+  it("queues and resolves after init when waitInit=true", async () => {
+    const p = Poter.check(
+      { requiredPermissions: [{ resource: "x", actions: ["read"] }] },
+      { waitInit: true },
+    ) as Promise<boolean>
+    Poter.init([], { x: ["read"] })
     await expect(p).resolves.toBe(true)
   })
 })

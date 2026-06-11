@@ -1,7 +1,15 @@
 import PermissionWrapper from "@/components/permission-wrapper"
-import Poter from "@/instance"
+import Poter, { CPoter } from "@/instance"
 
 export { useRoutePermission } from "@/hooks/useRoutePermission"
-export type { PoterGrantedPermission, PoterAuth, PoterAuthParams, PoterRoute } from "@/type"
+export { PoterAuthError } from "@/error"
+export type {
+  PoterGrantedPermission,
+  PoterAuth,
+  PoterAuthParams,
+  PoterRoute,
+  PoterOptions,
+  PoterAsyncOptions,
+} from "@/type"
 export default Poter
-export { PermissionWrapper }
+export { PermissionWrapper, CPoter }
