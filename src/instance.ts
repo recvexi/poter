@@ -4,7 +4,14 @@ import { PoterAuthError } from "@/error"
 import { emitPoterInit, emitPoterUpdate } from "@/events"
 import { normalizePath } from "@/utils"
 
-import type { PoterAuth, PoterAuthParams, PoterAsyncOptions, PoterOptions, PoterRoute, PoterGrantedPermission } from "@/type"
+import type {
+  PoterAuth,
+  PoterAuthParams,
+  PoterAsyncOptions,
+  PoterOptions,
+  PoterRoute,
+  PoterGrantedPermission,
+} from "@/type"
 
 /**
  * @summary 权限控制类（实例化版本）
@@ -59,6 +66,9 @@ export class CPoter {
   }
 
   check = (params: PoterAuthParams) => {
+    // 在统一鉴权入口放行，使路由、组件和直接检查遵循同一开关。
+    if (this.options.enable === false) return true
+
     const { requiredPermissions, oneOfPerm } = params
     if (Array.isArray(requiredPermissions) && requiredPermissions.length) {
       let count = 0
