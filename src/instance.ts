@@ -1,7 +1,7 @@
 import Taro from "@tarojs/taro"
 
 import { PoterAuthError } from "@/error"
-import { emitPoterInit, emitPoterUpdate } from "@/events"
+import { emitPoterInit, emitPoterReset, emitPoterUpdate } from "@/events"
 import { normalizePath } from "@/utils"
 
 import type {
@@ -149,11 +149,16 @@ const Poter = {
     emitPoterInit()
   },
 
+  isInitialized(): boolean {
+    return !!this._instance
+  },
+
   reset() {
     this._instance = undefined
     this._options = {}
     this._queue = []
     this._flushing = false
+    emitPoterReset()
   },
 
   authenticationPath(url: string): boolean {
