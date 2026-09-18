@@ -217,8 +217,10 @@ type PermissionWrapperProps = {
 }
 ```
 
-- 内部通过 `check({ waitInit: true })` 异步鉴权，init 前不会误放行 children
-- 权限初始化/变更后自动刷新
+- 初始化前显示 `loading`，不会放行 children；可通过 `Poter.isInitialized()` 查询初始化状态。
+- 初始化后同步鉴权，刷新权限时不先清空内容，避免子组件状态丢失和滚动区域高度塌陷。
+- 按权限内容比较参数，支持内联数组；权限及 actions 的顺序、重复项不触发重新校验，正则按 source 和 flags 比较。
+- 权限初始化、变更及 `reset()` 后自动刷新；权限撤销时显示 backup，重置后重新等待初始化。
 
 ### 类型与错误导出
 
