@@ -266,3 +266,20 @@ pnpm run build
 ## 许可
 
 MIT © recvexi
+
+### 权限总开关
+
+通过初始化选项 `enable` 统一控制权限检查，省略时默认开启，兼容已有行为：
+
+```ts
+Poter.init(routes, grantedPermissions, {
+  enable: false,
+  navigateBackFallback: "/pages/index/index",
+})
+```
+
+- `enable: false`：路由跳转、`authenticationPath`、`authRoute`、`check`、`PermissionWrapper` 和 `useRoutePermission` 均放行。
+- `enable: true` 或省略：按配置的权限检查。
+- 关闭开关不会修改用户权限或清空路由；重新调用 `init` 开启后恢复检查，组件和 Hook 会收到初始化事件并重新计算。
+- 初始化前仍保留原有等待或拒绝行为。该开关仅控制前端权限，不改变后端鉴权。
+- 业务自行缓存的鉴权结果需要重新计算，不会由库直接更新。

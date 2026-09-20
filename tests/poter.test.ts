@@ -96,6 +96,34 @@ describe("Poter manager singleton", () => {
     Poter.reset()
   })
 
+  it("disabled permissions allow direct checks, routes and navigation without granting resources", async () => {
+    Poter.init(routes, {}, { enable: false })
+    expect(Poter.check({ requiredPermissions: [{ resource: "product", actions: ["read"] }] })).toBe(true)
+    expect(Poter.authenticationPath("/d")).toBe(true)
+    await expect(Poter.authRoute("/d", { waitInit: true })).resolves.toBe(true)
+    await expect(Poter.navigateTo({ url: "/d" })).resolves.toMatchObject({ ok: true })
+    await expect(Poter.redirectTo({ url: "/d" })).resolves.toMatchObject({ ok: true })
+    await expect(Poter.switchTab({ url: "/d" })).resolves.toMatchObject({ ok: true })
+    expect(Poter._instance?.getPermissions()).toEqual({})
+  })
+
+  it("queued checks use the switch from initialization", async () => {
+    const check = Poter.check({ requiredPermissions: [{ resource: "product", actions: ["read"] }] }, { waitInit: true })
+    const route = Poter.authRoute("/d", { waitInit: true })
+    Poter.init(routes, {}, { enable: false })
+    await expect(check).resolves.toBe(true)
+    await expect(route).resolves.toBe(true)
+  })
+
+  it("reinitializing with enabled or default options restores permission checks", () => {
+    Poter.init(routes, {}, { enable: false })
+    Poter.init(routes, {}, { enable: true })
+    expect(Poter.authenticationPath("/d")).toBe(false)
+    Poter.init(routes, {}, { enable: false })
+    Poter.init(routes, {})
+    expect(Poter.check({ requiredPermissions: [{ resource: "product", actions: ["read"] }] })).toBe(false)
+  })
+
   it("authenticationPath returns false before init", () => {
     expect(Poter.authenticationPath("/c")).toBe(false)
   })

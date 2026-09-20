@@ -17,6 +17,8 @@ export type PoterRoute = {
 }
 
 export type PoterOptions = {
+  /** 权限总开关，默认开启；仅显式 false 时放行路由及资源权限检查 */
+  enable?: boolean
   /** navigateBack 失败时跳转的 tab 页路径；未配置则不自动跳转 */
   navigateBackFallback?: string
 }
